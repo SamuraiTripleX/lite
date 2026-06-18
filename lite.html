@@ -1,0 +1,1621 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulador Lite - Copa do Mundo 2026</title>
+  <style>
+    :root {
+      --bg: #f4f6f2;
+      --panel: #ffffff;
+      --soft: #edf3ef;
+      --ink: #17211c;
+      --muted: #657169;
+      --line: #dbe3dd;
+      --green: #12724f;
+      --green-dark: #0b4d38;
+      --gold: #d59a2f;
+      --red: #b83b35;
+      --shadow: 0 18px 42px rgba(20, 32, 26, .1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, #e8f0ea 0, var(--bg) 220px),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 12px 12px 28px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0 12px;
+      background: linear-gradient(180deg, #e8f0ea 0, rgba(232, 240, 234, .92) 76%, rgba(232, 240, 234, 0));
+      backdrop-filter: blur(10px);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(22px, 7vw, 34px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .eyebrow {
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0 15px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--green);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(18, 114, 79, .26);
+      cursor: pointer;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .panel {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      line-height: 1.15;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .final-card {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(18, 114, 79, .95), rgba(11, 77, 56, .94)),
+        #10241b;
+      color: #fff;
+    }
+
+    .final-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -30px -52px auto;
+      width: 160px;
+      height: 160px;
+      border: 18px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
+    }
+
+    .champion {
+      position: relative;
+      display: grid;
+      gap: 4px;
+    }
+
+    .champion span {
+      color: rgba(255, 255, 255, .76);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .champion strong {
+      font-size: clamp(34px, 11vw, 58px);
+      line-height: .98;
+      overflow-wrap: anywhere;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .team {
+      display: flex;
+      min-width: 0;
+      gap: 8px;
+      align-items: center;
+      font-weight: 900;
+    }
+
+    .team.right {
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .team span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .flag {
+      width: 26px;
+      height: 18px;
+      flex: 0 0 auto;
+      border-radius: 3px;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .08);
+    }
+
+    .score {
+      min-width: 70px;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .12);
+      text-align: center;
+      font-size: 22px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .semi-grid,
+    .mini-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .semi-card,
+    .match-card,
+    .standing-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .semi-card {
+      padding: 10px;
+      border-color: #ead8a9;
+      background: #fffaf0;
+    }
+
+    .semi-card h3,
+    .round-title {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .tabs {
+      position: sticky;
+      top: 68px;
+      z-index: 15;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .9);
+      backdrop-filter: blur(10px);
+    }
+
+    .tab {
+      min-height: 38px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .round-block,
+    .group-block {
+      margin-top: 10px;
+    }
+
+    details {
+      margin-top: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px;
+      cursor: pointer;
+      font-weight: 950;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .detail-body {
+      display: grid;
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+
+    .match-card {
+      display: grid;
+      gap: 7px;
+      padding: 9px;
+    }
+
+    .match-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .badge.real {
+      background: #fff0db;
+      color: #8a4e00;
+    }
+
+    .standing-card {
+      padding: 10px;
+    }
+
+    .standing-row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) 34px 34px 34px 34px;
+      gap: 6px;
+      align-items: center;
+      min-height: 28px;
+      border-bottom: 1px solid #edf2ef;
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .standing-row:last-child {
+      border-bottom: 0;
+    }
+
+    .standing-row.header {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .standing-team {
+      display: flex;
+      min-width: 0;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .standing-team span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty {
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: #fff;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    @media (min-width: 680px) {
+      .semi-grid,
+      .mini-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        padding-inline: 9px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .tabs {
+        top: 116px;
+      }
+
+      .score-row {
+        grid-template-columns: 1fr;
+      }
+
+      .score {
+        width: 100%;
+      }
+
+      .team.right {
+        justify-content: flex-start;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Copa do Mundo 2026</p>
+        <h1>Simulador Lite</h1>
+      </div>
+      <button class="btn" type="button" id="simulateBtn">Simular</button>
+    </header>
+
+    <section id="heroPanel" class="final-card"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">Semifinais</h2>
+        <span class="muted" id="semiMeta">Aguardando</span>
+      </div>
+      <div class="semi-grid" id="semiList"></div>
+    </section>
+
+    <nav class="tabs" aria-label="Se&ccedil;&otilde;es">
+      <button class="tab active" type="button" data-view="resumo">Resumo</button>
+      <button class="tab" type="button" data-view="grupos">Grupos</button>
+      <button class="tab" type="button" data-view="mata">Mata-mata</button>
+      <button class="tab" type="button" data-view="jogos">Jogos</button>
+    </nav>
+
+    <section id="resumoView" class="view active"></section>
+    <section id="gruposView" class="view"></section>
+    <section id="mataView" class="view"></section>
+    <section id="jogosView" class="view"></section>
+  </main>
+
+  <script src="simulador-dados.js"></script>
+  <script src="terceiros-2026.js"></script>
+  <script>
+    (() => {
+      const DATA = window.SIMULADOR_DATA || {};
+      const CORRECT_SCORE_SOURCES = ["betano", "bet365"];
+      const KNOCKOUT_SOURCES = ["theanalyst", "chancedegol"];
+
+      const state = {
+        countries: DATA.countries || { countries: [] },
+        odds: DATA.odds || { categories: {} },
+        realResults: DATA.realResults || { matches: [] },
+        knockoutOdds: DATA.knockoutOdds || { sources: {} },
+        countryIndex: null,
+        knockoutIndex: new Map(),
+        groups: new Map(),
+        groupByCode: new Map(),
+        matches: [],
+        results: new Map(),
+        knockout: null,
+        tieSeeds: new Map(),
+        simulated: false,
+        view: "resumo"
+      };
+
+      const els = {};
+
+      document.addEventListener("DOMContentLoaded", boot);
+
+      function boot() {
+        cacheElements();
+        bindEvents();
+        state.countryIndex = buildCountryIndex(state.countries);
+        state.knockoutIndex = buildKnockoutIndex(state.knockoutOdds);
+        buildGroups();
+        state.matches = buildMatches();
+        render();
+      }
+
+      function cacheElements() {
+        ["simulateBtn", "heroPanel", "semiMeta", "semiList", "resumoView", "gruposView", "mataView", "jogosView"]
+          .forEach((id) => { els[id] = document.getElementById(id); });
+      }
+
+      function bindEvents() {
+        els.simulateBtn.addEventListener("click", simulateTournament);
+        document.querySelectorAll(".tab").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.view = button.dataset.view;
+            document.querySelectorAll(".tab").forEach((item) => item.classList.toggle("active", item === button));
+            document.querySelectorAll(".view").forEach((item) => item.classList.toggle("active", item.id === `${state.view}View`));
+          });
+        });
+      }
+
+      function simulateTournament() {
+        state.results.clear();
+        state.knockout = null;
+        state.tieSeeds.clear();
+
+        state.matches.forEach((match) => {
+          const result = simulateMatch(match);
+          result.committed = true;
+          state.results.set(match.key, result);
+        });
+
+        const standings = computeStandings([...state.results.values()]);
+        state.knockout = simulateKnockout(standings);
+        state.simulated = true;
+        els.simulateBtn.textContent = "Simular de novo";
+        render();
+      }
+
+      function render() {
+        const tableResults = tableResultsForStandings();
+        const standings = computeStandings(tableResults);
+        renderHero();
+        renderSemis();
+        els.resumoView.innerHTML = summaryHtml(standings);
+        els.gruposView.innerHTML = groupsHtml(standings);
+        els.mataView.innerHTML = knockoutHtml();
+        els.jogosView.innerHTML = groupGamesHtml();
+      }
+
+      function renderHero() {
+        if (!state.knockout) {
+          els.heroPanel.innerHTML = `
+            <div class="champion">
+              <span>Simulador rapido</span>
+              <strong>Copa 2026</strong>
+            </div>
+            <p class="muted" style="color: rgba(255,255,255,.78)">${state.realResults.matches.length} resultados reais carregados</p>
+          `;
+          return;
+        }
+
+        const final = roundMatches("Final")[0];
+        els.heroPanel.innerHTML = `
+          <div class="champion">
+            <span>Campeao</span>
+            <strong>${escapeHtml(state.knockout.champion.name)}</strong>
+          </div>
+          ${final ? knockoutScoreRowHtml(final) : ""}
+        `;
+      }
+
+      function renderSemis() {
+        const semis = roundMatches("Semifinais");
+        els.semiMeta.textContent = semis.length ? "Definidas" : "Aguardando";
+        els.semiList.innerHTML = semis.length
+          ? semis.map((match) => `
+            <article class="semi-card">
+              <h3>Semifinal</h3>
+              ${knockoutScoreRowHtml(match)}
+            </article>
+          `).join("")
+          : '<div class="empty">Semifinais</div>';
+      }
+
+      function summaryHtml(standings) {
+        if (!state.knockout) {
+          return `
+            <section class="panel">
+              <div class="panel-head">
+                <h2 class="panel-title">Resumo</h2>
+                <span class="muted">${state.matches.length} jogos</span>
+              </div>
+              <div class="mini-grid">
+                ${metricCard("Jogos da fase de grupos", state.matches.length)}
+                ${metricCard("Resultados reais", state.realResults.matches.length)}
+              </div>
+            </section>
+            ${topGroupsHtml(standings)}
+          `;
+        }
+
+        const final = roundMatches("Final")[0];
+        const third = roundMatches("3o lugar")[0];
+        return `
+          <section class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Final</h2>
+              <span class="muted">Jogo ${final?.no || ""}</span>
+            </div>
+            ${final ? `<div class="match-card">${knockoutScoreRowHtml(final)}</div>` : ""}
+            ${third ? `<div class="match-card" style="margin-top:9px"><div class="round-title">3o lugar</div>${knockoutScoreRowHtml(third)}</div>` : ""}
+          </section>
+          ${topGroupsHtml(standings)}
+        `;
+      }
+
+      function metricCard(label, value) {
+        return `
+          <div class="standing-card">
+            <div class="muted">${escapeHtml(label)}</div>
+            <strong style="display:block; margin-top:4px; font-size:28px">${escapeHtml(String(value))}</strong>
+          </div>
+        `;
+      }
+
+      function topGroupsHtml(standings) {
+        return `
+          <section class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Lideres dos grupos</h2>
+              <span class="muted">A-L</span>
+            </div>
+            <div class="mini-grid">
+              ${[...state.groups.keys()].map((group) => {
+                const leader = standings.get(group)?.[0];
+                return `
+                  <div class="match-card">
+                    <div class="match-meta"><span>Grupo ${escapeHtml(group)}</span><span>${leader?.pts ?? 0} pts</span></div>
+                    ${leader ? teamInlineHtml({ code: leader.code, name: leader.name }) : ""}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function groupsHtml(standings) {
+        return `
+          <section class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Classificacao</h2>
+              <span class="muted">Grupos</span>
+            </div>
+            ${[...state.groups.keys()].map((group) => `
+              <details ${group === "A" ? "open" : ""}>
+                <summary><span>Grupo ${escapeHtml(group)}</span><span class="muted">${(standings.get(group) || []).length} selecoes</span></summary>
+                <div class="detail-body">
+                  ${standingTableHtml(standings.get(group) || [])}
+                </div>
+              </details>
+            `).join("")}
+          </section>
+        `;
+      }
+
+      function groupGamesHtml() {
+        return `
+          <section class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Fase de grupos</h2>
+              <span class="muted">${state.matches.length} jogos</span>
+            </div>
+            ${[...state.groups.keys()].map((group) => `
+              <details ${group === "A" ? "open" : ""}>
+                <summary><span>Grupo ${escapeHtml(group)}</span><span class="muted">${groupMatches(group).length} jogos</span></summary>
+                <div class="detail-body">
+                  ${groupMatches(group).map((match) => groupMatchCardHtml(match)).join("")}
+                </div>
+              </details>
+            `).join("")}
+          </section>
+        `;
+      }
+
+      function knockoutHtml() {
+        if (!state.knockout) {
+          return `
+            <section class="panel">
+              <div class="panel-head">
+                <h2 class="panel-title">Mata-mata</h2>
+                <span class="muted">32 jogos</span>
+              </div>
+              <div class="empty">Mata-mata</div>
+            </section>
+          `;
+        }
+
+        return `
+          <section class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Mata-mata</h2>
+              <span class="muted">Campeao: ${escapeHtml(state.knockout.champion.name)}</span>
+            </div>
+            ${state.knockout.rounds.map((round) => `
+              <details ${["Semifinais", "Final"].includes(round.name) ? "open" : ""}>
+                <summary><span>${escapeHtml(round.name)}</span><span class="muted">${round.matches.length} jogos</span></summary>
+                <div class="detail-body">
+                  ${round.matches.map((match) => `
+                    <div class="match-card">
+                      <div class="match-meta"><span>Jogo ${match.no}</span><span>${escapeHtml(match.note || "")}</span></div>
+                      ${knockoutScoreRowHtml(match)}
+                    </div>
+                  `).join("")}
+                </div>
+              </details>
+            `).join("")}
+          </section>
+        `;
+      }
+
+      function standingTableHtml(rows) {
+        return `
+          <div class="standing-card">
+            <div class="standing-row header"><span>#</span><span>Selecao</span><span class="num">Pts</span><span class="num">J</span><span class="num">SG</span><span class="num">GP</span></div>
+            ${rows.map((row, index) => `
+              <div class="standing-row">
+                <strong>${index + 1}</strong>
+                <div class="standing-team">${flagHtml(row.code)}<span>${escapeHtml(row.name)}</span></div>
+                <strong class="num">${row.pts}</strong>
+                <span class="num">${row.pj}</span>
+                <span class="num">${row.gd}</span>
+                <span class="num">${row.gf}</span>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      function groupMatchCardHtml(match) {
+        const result = visibleResult(match);
+        return `
+          <div class="match-card">
+            <div class="match-meta">
+              <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
+              <span class="badge ${result?.locked ? "real" : ""}">${result ? (result.locked ? "Real" : "Simulado") : "Pendente"}</span>
+            </div>
+            ${scoreRowHtml(
+              { code: match.homeCode, name: match.homeName },
+              { code: match.awayCode, name: match.awayName },
+              result ? result.homeGoals : "-",
+              result ? result.awayGoals : "-"
+            )}
+          </div>
+        `;
+      }
+
+      function knockoutScoreRowHtml(match) {
+        return scoreRowHtml(
+          match.home,
+          match.away,
+          penaltyScore(match.homeGoals, match.penalties?.home),
+          penaltyScore(match.awayGoals, match.penalties?.away),
+          match.winner?.code
+        );
+      }
+
+      function scoreRowHtml(home, away, homeScore, awayScore, winnerCode = "") {
+        return `
+          <div class="score-row">
+            <div class="team ${winnerCode === home.code ? "winner" : ""}">${flagHtml(home.code)}<span>${escapeHtml(home.name)}</span></div>
+            <div class="score">${escapeHtml(homeScore)} x ${escapeHtml(awayScore)}</div>
+            <div class="team right ${winnerCode === away.code ? "winner" : ""}"><span>${escapeHtml(away.name)}</span>${flagHtml(away.code)}</div>
+          </div>
+        `;
+      }
+
+      function teamInlineHtml(team) {
+        return `<div class="team">${flagHtml(team.code)}<span>${escapeHtml(team.name)}</span></div>`;
+      }
+
+      function flagHtml(code) {
+        return `<img class="flag" src="flags/${escapeHtml(code)}.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+      }
+
+      function penaltyScore(goals, penalties) {
+        return penalties == null ? goals : `${goals} (${penalties})`;
+      }
+
+      function visibleResult(match) {
+        if (state.results.has(match.key)) return state.results.get(match.key);
+        return match.real ? realResultForMatch(match) : null;
+      }
+
+      function groupMatches(group) {
+        return state.matches.filter((match) => match.group === group);
+      }
+
+      function roundMatches(name) {
+        return state.knockout?.rounds.find((round) => round.name === name)?.matches || [];
+      }
+
+      function tableResultsForStandings() {
+        if (state.simulated) return [...state.results.values()];
+        return state.matches.filter((match) => match.real).map((match) => realResultForMatch(match));
+      }
+
+      function buildCountryIndex(countriesFile) {
+        const byCode = new Map();
+        const byName = new Map();
+        const list = countriesFile.countries || [];
+        list.forEach((country) => {
+          byCode.set(country.code, country);
+          addCountryAlias(byName, country.short_name, country.code);
+          addCountryAlias(byName, country.long_name, country.code);
+          addCountryAlias(byName, country.code, country.code);
+          (country.aliases || []).forEach((alias) => addCountryAlias(byName, alias, country.code));
+        });
+        Object.entries({
+          "alemanha": "GER", "argelia": "ALG", "arabia saudita": "KSA", "australia": "AUS", "austria": "AUT",
+          "belgica": "BEL", "bosnia": "BIH", "bosnia herzegovina": "BIH", "bosnia e herzegovina": "BIH",
+          "brasil": "BRA", "canada": "CAN", "cabo verde": "CPV", "colombia": "COL", "coreia do sul": "KOR",
+          "costa do marfim": "CIV", "croacia": "CRO", "curacao": "CUW", "egito": "EGY", "equador": "ECU",
+          "escocia": "SCO", "espanha": "ESP", "estados unidos": "USA", "eua": "USA", "franca": "FRA",
+          "gana": "GHA", "haiti": "HAI", "holanda": "NED", "paises baixos": "NED", "inglaterra": "ENG",
+          "ira": "IRN", "iran": "IRN", "iraque": "IRQ", "japao": "JPN", "jordania": "JOR", "marrocos": "MAR",
+          "mexico": "MEX", "noruega": "NOR", "nova zelandia": "NZL", "panama": "PAN", "paraguai": "PAR",
+          "portugal": "POR", "qatar": "QAT", "catar": "QAT", "rd congo": "COD", "dr congo": "COD",
+          "republica democratica do congo": "COD", "republica checa": "CZE", "republica tcheca": "CZE",
+          "czech republic": "CZE", "czechia": "CZE", "chequia": "CZE", "tchequia": "CZE", "africa do sul": "RSA",
+          "senegal": "SEN", "suica": "SUI", "switzerland": "SUI", "suecia": "SWE", "tunisia": "TUN",
+          "turquia": "TUR", "turkiye": "TUR", "uruguai": "URU", "uzbequistao": "UZB", "usbequistao": "UZB"
+        }).forEach(([name, code]) => addCountryAlias(byName, name, code));
+        return { byCode, byName };
+      }
+
+      function addCountryAlias(map, name, code) {
+        if (!name || !code) return;
+        map.set(normalizeName(name), code);
+      }
+
+      function buildKnockoutIndex(knockoutFile) {
+        const index = new Map();
+        Object.entries(knockoutFile.sources || {}).forEach(([sourceKey, source]) => {
+          const byCode = new Map();
+          (source.values || []).forEach((item) => {
+            if (item?.code && item.probabilities) byCode.set(item.code, item.probabilities);
+          });
+          index.set(sourceKey, byCode);
+        });
+        return index;
+      }
+
+      function buildGroups() {
+        const sources = state.odds.categories?.vencedor_grupo?.sources || {};
+        const preferred = sources.betano || sources.bet365 || sources.oddspedia || Object.values(sources)[0];
+        const values = toArray(preferred?.values).filter((item) => item && item.selection);
+        state.groups = new Map();
+        state.groupByCode = new Map();
+
+        for (let index = 0; index < values.length; index += 4) {
+          const group = String.fromCharCode(65 + Math.floor(index / 4));
+          const teams = values.slice(index, index + 4)
+            .map((item) => {
+              const code = resolveCountryCode(item.selection);
+              return { code, name: displayCountryName(code, item.selection), odd: toNumber(item.odd) };
+            })
+            .filter((team) => team.code);
+          if (teams.length) {
+            state.groups.set(group, teams);
+            teams.forEach((team) => state.groupByCode.set(team.code, group));
+          }
+        }
+      }
+
+      function buildMatches() {
+        const map = new Map();
+        const oneXTwoSources = state.odds.categories?.confronto_1x2?.sources || {};
+        const correctScoreSources = state.odds.categories?.resultado_correto?.sources || {};
+
+        Object.keys(oneXTwoSources).forEach((source) => {
+          toArray(oneXTwoSources[source]?.values).forEach((item) => {
+            if (!item?.home || !item?.away || !item.odds) return;
+            const match = ensureMatch(map, item.home, item.away, item.kickoff, item.id);
+            if (match && isValidOutcomeOdds(item.odds)) {
+              match.odds1x2[source] = {
+                home: toNumber(item.odds.home),
+                draw: toNumber(item.odds.draw),
+                away: toNumber(item.odds.away)
+              };
+            }
+          });
+        });
+
+        CORRECT_SCORE_SOURCES.forEach((source) => {
+          toArray(correctScoreSources[source]?.values).forEach((item) => {
+            if (!item?.home || !item?.away || !item.values) return;
+            const match = ensureMatch(map, item.home, item.away, item.kickoff, item.id);
+            if (match) {
+              match.correctScore[source] = {
+                values: toArray(item.values).filter((value) => value?.score && toNumber(value.odd) > 1)
+              };
+            }
+          });
+        });
+
+        (state.realResults.matches || []).forEach((item) => {
+          const match = ensureMatchByCode(map, item.home?.code, item.away?.code, item.kickoff, item.id, item.home?.name, item.away?.name);
+          if (match) {
+            match.real = item;
+            if (item.group) match.group = item.group;
+          }
+        });
+
+        completeGroupStageMatches(map);
+
+        return [...map.values()]
+          .filter((match) => match.homeCode && match.awayCode)
+          .sort((a, b) => {
+            const dateA = a.kickoff ? Date.parse(a.kickoff) : Number.MAX_SAFE_INTEGER;
+            const dateB = b.kickoff ? Date.parse(b.kickoff) : Number.MAX_SAFE_INTEGER;
+            return dateA - dateB || (a.sortOrder || 0) - (b.sortOrder || 0) || a.homeName.localeCompare(b.homeName, "pt-BR");
+          });
+      }
+
+      function completeGroupStageMatches(map) {
+        state.groups.forEach((teams, group) => {
+          const order = groupPositionOrder(group, map, teams.map((team) => team.code));
+          if (order.length !== 4) return;
+          [
+            { round: 1, pairs: [[0, 1], [2, 3]] },
+            { round: 2, pairs: [[0, 2], [3, 1]] },
+            { round: 3, pairs: [[3, 0], [1, 2]] }
+          ].forEach((roundBlock) => {
+            roundBlock.pairs.forEach((pair, pairIndex) => {
+              const homeCode = order[pair[0]];
+              const awayCode = order[pair[1]];
+              const kickoff = generatedKickoff(group, roundBlock.round, pairIndex);
+              const match = ensureMatchByCode(map, homeCode, awayCode, kickoff, `WC2026-G${group}-R${roundBlock.round}-${homeCode}-${awayCode}`, displayCountryName(homeCode), displayCountryName(awayCode));
+              if (match) {
+                match.group = group;
+                match.round = roundBlock.round;
+                match.sortOrder = group.charCodeAt(0) * 10 + roundBlock.round * 2 + pairIndex;
+                if (!match.kickoff) match.kickoff = kickoff;
+              }
+            });
+          });
+        });
+      }
+
+      function groupPositionOrder(group, map, fallbackCodes) {
+        const known = [...map.values()]
+          .filter((match) => match.group === group && match.kickoff)
+          .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff));
+        const ordered = [];
+        known.forEach((match) => {
+          [match.homeCode, match.awayCode].forEach((code) => {
+            if (fallbackCodes.includes(code) && !ordered.includes(code) && ordered.length < 4) ordered.push(code);
+          });
+        });
+        fallbackCodes.forEach((code) => {
+          if (!ordered.includes(code)) ordered.push(code);
+        });
+        return ordered.slice(0, 4);
+      }
+
+      function generatedKickoff(group, round, pairIndex) {
+        const roundDates = {
+          1: { A: "2026-06-11", B: "2026-06-12", C: "2026-06-13", D: "2026-06-12", E: "2026-06-14", F: "2026-06-14", G: "2026-06-15", H: "2026-06-15", I: "2026-06-16", J: "2026-06-16", K: "2026-06-17", L: "2026-06-17" },
+          2: { A: "2026-06-18", B: "2026-06-18", C: "2026-06-19", D: "2026-06-19", E: "2026-06-20", F: "2026-06-20", G: "2026-06-21", H: "2026-06-21", I: "2026-06-22", J: "2026-06-22", K: "2026-06-23", L: "2026-06-23" },
+          3: { A: "2026-06-24", B: "2026-06-24", C: "2026-06-24", D: "2026-06-25", E: "2026-06-25", F: "2026-06-25", G: "2026-06-26", H: "2026-06-26", I: "2026-06-26", J: "2026-06-27", K: "2026-06-27", L: "2026-06-27" }
+        };
+        const times = round === 3 ? ["17:00:00", "21:00:00"] : ["16:00:00", "22:00:00"];
+        return `${roundDates[round]?.[group] || "2026-06-27"}T${times[pairIndex] || "16:00:00"}-03:00`;
+      }
+
+      function ensureMatch(map, homeName, awayName, kickoff, id) {
+        return ensureMatchByCode(map, resolveCountryCode(homeName), resolveCountryCode(awayName), kickoff, id, homeName, awayName);
+      }
+
+      function ensureMatchByCode(map, homeCode, awayCode, kickoff, id, homeName, awayName) {
+        if (!homeCode || !awayCode) return null;
+        const key = `${homeCode}_${awayCode}`;
+        if (!map.has(key)) {
+          const group = state.groupByCode.get(homeCode) || state.groupByCode.get(awayCode) || "";
+          map.set(key, {
+            key,
+            id: id || key,
+            homeCode,
+            awayCode,
+            homeName: displayCountryName(homeCode, homeName),
+            awayName: displayCountryName(awayCode, awayName),
+            kickoff: kickoff || "",
+            group,
+            odds1x2: {},
+            correctScore: {},
+            real: null
+          });
+        }
+        const match = map.get(key);
+        if (kickoff && !match.kickoff) match.kickoff = kickoff;
+        if (id && !match.id) match.id = id;
+        if (!match.group) match.group = state.groupByCode.get(homeCode) || state.groupByCode.get(awayCode) || "";
+        return match;
+      }
+
+      function simulateMatch(match) {
+        if (match.real) return realResultForMatch(match);
+        const distribution = getDistribution(match);
+        const picked = pickScoreFromDistribution(distribution || neutralDistribution());
+        return {
+          match,
+          homeGoals: picked.home,
+          awayGoals: picked.away,
+          source: distribution?.kind || "neutral",
+          badge: "Simulado",
+          locked: false,
+          committed: false,
+          distribution
+        };
+      }
+
+      function realResultForMatch(match) {
+        return {
+          match,
+          homeGoals: match.real.score.home,
+          awayGoals: match.real.score.away,
+          source: "real",
+          badge: "Real",
+          locked: true,
+          committed: true
+        };
+      }
+
+      function getDistribution(match) {
+        return knockoutDistribution(match) || outcomeThenScoreDistribution(match) || correctScoreDistribution(match) || borrowedCorrectScoreDistribution(match) || neutralDistribution();
+      }
+
+      function outcomeThenScoreDistribution(match) {
+        const outcomeDistribution = oneXTwoOutcomeDistribution(match);
+        if (!outcomeDistribution) return null;
+        const directScoreDistribution = correctScoreDistribution(match);
+        const scoreDistribution = directScoreDistribution || borrowedCorrectScoreDistribution(match);
+        const scoreModel = scoreDistributionFromOutcome(outcomeDistribution.outcomeProbabilities, scoreDistribution?.entries);
+        return {
+          kind: scoreDistribution ? (directScoreDistribution ? "outcome_then_score" : "outcome_then_borrowed_score") : "one_x_two",
+          entries: scoreModel.entries,
+          scoreByOutcome: scoreModel.scoreByOutcome,
+          outcomeProbabilities: outcomeDistribution.outcomeProbabilities
+        };
+      }
+
+      function oneXTwoOutcomeDistribution(match) {
+        const normalized = Object.keys(match.odds1x2 || {})
+          .map((source) => normalizeOutcomeSource(source, match.odds1x2[source]))
+          .filter(Boolean);
+        if (!normalized.length) return null;
+        return { normalized, outcomeProbabilities: averageOutcomeProbabilities(normalized) };
+      }
+
+      function averageOutcomeProbabilities(normalized) {
+        const outcome = {
+          home: average(normalized.map((item) => item.probabilities.home)),
+          draw: average(normalized.map((item) => item.probabilities.draw)),
+          away: average(normalized.map((item) => item.probabilities.away))
+        };
+        const total = outcome.home + outcome.draw + outcome.away;
+        if (!total) return { home: .36, draw: .28, away: .36 };
+        return { home: outcome.home / total, draw: outcome.draw / total, away: outcome.away / total };
+      }
+
+      function correctScoreDistribution(match) {
+        const sourceDistributions = CORRECT_SCORE_SOURCES
+          .filter((source) => match.correctScore[source])
+          .map((source) => scoreSourceDistribution(source, match.correctScore[source].values))
+          .filter(Boolean);
+        if (!sourceDistributions.length) return null;
+        const union = new Map();
+        sourceDistributions.forEach((dist) => {
+          dist.entries.forEach((entry) => {
+            if (!union.has(entry.score)) {
+              union.set(entry.score, { score: entry.score, home: entry.home, away: entry.away, sourceProbabilities: [] });
+            }
+            union.get(entry.score).sourceProbabilities.push(entry.prob);
+          });
+        });
+        const entries = renormalizeEntries([...union.values()].map((entry) => ({
+          score: entry.score,
+          home: entry.home,
+          away: entry.away,
+          prob: average(entry.sourceProbabilities)
+        })));
+        return { kind: "correct_score", entries };
+      }
+
+      function borrowedCorrectScoreDistribution(match) {
+        const donors = state.matches
+          .filter((candidate) => candidate.key !== match.key)
+          .map((candidate) => ({ match: candidate, distribution: correctScoreDistribution(candidate) }))
+          .filter((item) => item.distribution);
+        if (!donors.length) return null;
+        const donor = donors[randomInt(0, donors.length - 1)];
+        return { ...donor.distribution, kind: "borrowed_correct_score", borrowedFrom: donor.match.key };
+      }
+
+      function scoreSourceDistribution(source, values) {
+        const byScore = new Map();
+        values.forEach((item) => {
+          const parsed = parseScore(item.score);
+          const odd = toNumber(item.odd);
+          if (!parsed || odd <= 1) return;
+          byScore.set(parsed.score, { score: parsed.score, home: parsed.home, away: parsed.away, odd, raw: 1 / odd });
+        });
+        const rawEntries = [...byScore.values()];
+        const overround = rawEntries.reduce((sum, entry) => sum + entry.raw, 0);
+        if (!overround) return null;
+        return { source, overround, entries: rawEntries.map((entry) => ({ ...entry, prob: entry.raw / overround })) };
+      }
+
+      function scoreDistributionFromOutcome(outcomeProbabilities, scoreEntries) {
+        const fallbackEntries = buildScoreGridFromOutcome(outcomeProbabilities);
+        const sourceEntries = (scoreEntries || []).filter((entry) => entry && Number.isFinite(entry.prob));
+        const scoreByOutcome = {};
+        const entries = [];
+        ["home", "draw", "away"].forEach((outcome) => {
+          const baseBucket = sourceEntries.filter((entry) => scoreOutcomeKey(entry) === outcome);
+          const fallbackBucket = fallbackEntries.filter((entry) => scoreOutcomeKey(entry) === outcome);
+          const bucket = baseBucket.length ? baseBucket : fallbackBucket;
+          const normalizedBucket = renormalizeEntries(bucket.map((entry) => ({ ...entry })));
+          scoreByOutcome[outcome] = normalizedBucket;
+          normalizedBucket.forEach((entry) => {
+            entries.push({ ...entry, prob: entry.prob * (outcomeProbabilities[outcome] || 0) });
+          });
+        });
+        return { entries: renormalizeEntries(entries), scoreByOutcome };
+      }
+
+      function scoreOutcomeKey(entry) {
+        if (entry.home > entry.away) return "home";
+        if (entry.home < entry.away) return "away";
+        return "draw";
+      }
+
+      function knockoutDistribution(match) {
+        if (!match.knockoutStage) return null;
+        const homeStageProb = knockoutTeamProbability(match.homeCode, match.knockoutStage);
+        const awayStageProb = knockoutTeamProbability(match.awayCode, match.knockoutStage);
+        const totalStageProb = homeStageProb + awayStageProb;
+        if (totalStageProb <= 0) return null;
+        const advanceProbabilities = { home: homeStageProb / totalStageProb, away: awayStageProb / totalStageProb };
+        const reference = closestOutcomeReference(advanceProbabilities);
+        const draw = reference?.outcome?.draw ?? .28;
+        const nonDraw = 1 - draw;
+        const outcomeProbabilities = { home: nonDraw * advanceProbabilities.home, draw, away: nonDraw * advanceProbabilities.away };
+        const scoreDistribution = borrowedCorrectScoreDistribution(match);
+        const scoreModel = scoreDistributionFromOutcome(outcomeProbabilities, scoreDistribution?.entries);
+        return {
+          kind: "knockout_phase",
+          entries: scoreModel.entries,
+          scoreByOutcome: scoreModel.scoreByOutcome,
+          outcomeProbabilities,
+          advanceProbabilities,
+          knockoutStage: match.knockoutStage
+        };
+      }
+
+      function knockoutTeamProbability(code, stage) {
+        const values = KNOCKOUT_SOURCES
+          .map((source) => toNumber(state.knockoutIndex.get(source)?.get(code)?.[stage]))
+          .filter((value) => value > 0);
+        return average(values);
+      }
+
+      function closestOutcomeReference(advanceProbabilities) {
+        const targetFavorite = Math.max(advanceProbabilities.home, advanceProbabilities.away);
+        const references = oneXTwoReferenceOutcomes();
+        if (!references.length) return null;
+        return references.reduce((best, item) => {
+          const distance = Math.abs(item.favorite - targetFavorite);
+          if (!best || distance < best.distance) return { ...item, distance };
+          return best;
+        }, null);
+      }
+
+      function oneXTwoReferenceOutcomes() {
+        const references = [];
+        state.matches.forEach((candidate) => {
+          const normalized = Object.keys(candidate.odds1x2 || {})
+            .map((source) => normalizeOutcomeSource(source, candidate.odds1x2[source]))
+            .filter(Boolean);
+          if (!normalized.length) return;
+          const outcome = averageOutcomeProbabilities(normalized);
+          const nonDraw = outcome.home + outcome.away;
+          if (nonDraw <= 0) return;
+          references.push({ matchKey: candidate.key, favorite: Math.max(outcome.home, outcome.away) / nonDraw, outcome });
+        });
+        return references;
+      }
+
+      function buildScoreGridFromOutcome(outcome) {
+        const maxGoals = 7;
+        const drawPressure = clamp((.31 - outcome.draw) * 1.4, -.28, .32);
+        const edge = clamp(outcome.home - outcome.away, -.52, .52);
+        const totalGoals = clamp(2.48 + drawPressure + Math.abs(edge) * .72, 1.75, 3.85);
+        const lambdaHome = clamp(totalGoals / 2 + edge * 1.35, .28, 4.25);
+        const lambdaAway = clamp(totalGoals / 2 - edge * 1.35, .28, 4.25);
+        const baseEntries = [];
+        for (let home = 0; home <= maxGoals; home += 1) {
+          for (let away = 0; away <= maxGoals; away += 1) {
+            baseEntries.push({ score: `${home}-${away}`, home, away, prob: poisson(home, lambdaHome) * poisson(away, lambdaAway) });
+          }
+        }
+        const baseMass = {
+          home: baseEntries.filter((entry) => entry.home > entry.away).reduce((sum, entry) => sum + entry.prob, 0),
+          draw: baseEntries.filter((entry) => entry.home === entry.away).reduce((sum, entry) => sum + entry.prob, 0),
+          away: baseEntries.filter((entry) => entry.home < entry.away).reduce((sum, entry) => sum + entry.prob, 0)
+        };
+        return renormalizeEntries(baseEntries.map((entry) => {
+          const key = scoreOutcomeKey(entry);
+          const factor = baseMass[key] ? outcome[key] / baseMass[key] : 1;
+          return { ...entry, prob: entry.prob * factor };
+        }));
+      }
+
+      function neutralDistribution() {
+        return { kind: "neutral", entries: buildScoreGridFromOutcome({ home: .37, draw: .28, away: .35 }) };
+      }
+
+      function pickScoreFromDistribution(distribution) {
+        if (distribution?.scoreByOutcome && distribution.outcomeProbabilities) {
+          const pickedOutcome = weightedPick([
+            { outcome: "home", prob: distribution.outcomeProbabilities.home || 0 },
+            { outcome: "draw", prob: distribution.outcomeProbabilities.draw || 0 },
+            { outcome: "away", prob: distribution.outcomeProbabilities.away || 0 }
+          ])?.outcome;
+          const bucket = distribution.scoreByOutcome[pickedOutcome] || [];
+          if (bucket.length) return { ...weightedPick(bucket), pickedOutcome };
+        }
+        return weightedPick(distribution.entries);
+      }
+
+      function simulateKnockout(standings) {
+        const qualifiers = knockoutQualifiers(standings);
+        const winnerByNo = new Map();
+        const loserByNo = new Map();
+        const rounds = [];
+        const round32Slots = [
+          { no: 73, home: groupSlot("A", 2), away: groupSlot("B", 2) },
+          { no: 74, home: groupSlot("E", 1), away: thirdSlot(["A", "B", "C", "D", "F"]) },
+          { no: 75, home: groupSlot("F", 1), away: groupSlot("C", 2) },
+          { no: 76, home: groupSlot("C", 1), away: groupSlot("F", 2) },
+          { no: 77, home: groupSlot("I", 1), away: thirdSlot(["C", "D", "F", "G", "H"]) },
+          { no: 78, home: groupSlot("E", 2), away: groupSlot("I", 2) },
+          { no: 79, home: groupSlot("A", 1), away: thirdSlot(["C", "E", "F", "H", "I"]) },
+          { no: 80, home: groupSlot("L", 1), away: thirdSlot(["E", "H", "I", "J", "K"]) },
+          { no: 81, home: groupSlot("D", 1), away: thirdSlot(["B", "E", "F", "I", "J"]) },
+          { no: 82, home: groupSlot("G", 1), away: thirdSlot(["A", "E", "H", "I", "J"]) },
+          { no: 83, home: groupSlot("K", 2), away: groupSlot("L", 2) },
+          { no: 84, home: groupSlot("H", 1), away: groupSlot("J", 2) },
+          { no: 85, home: groupSlot("B", 1), away: thirdSlot(["E", "F", "G", "I", "J"]) },
+          { no: 86, home: groupSlot("J", 1), away: groupSlot("H", 2) },
+          { no: 87, home: groupSlot("K", 1), away: thirdSlot(["D", "E", "I", "J", "L"]) },
+          { no: 88, home: groupSlot("D", 2), away: groupSlot("G", 2) }
+        ];
+        const thirdAssignments = assignThirdPlaceSlots(qualifiers.thirds, round32Slots);
+        const round32 = round32Slots.map((slot) => {
+          const home = resolveKnockoutSlot(slot.home, qualifiers, thirdAssignments, slot.no);
+          const away = resolveKnockoutSlot(slot.away, qualifiers, thirdAssignments, slot.no);
+          return simulateKnockoutMatch(slot.no, "32 avos", home, away, slot.away.type === "third" ? `3o ${away.group}` : "");
+        });
+        rounds.push({ name: "32 avos", matches: round32 });
+        recordKnockoutRound(round32, winnerByNo, loserByNo);
+        const round16 = [[89, 73, 75], [90, 74, 77], [91, 76, 78], [92, 79, 80], [93, 83, 84], [94, 81, 82], [95, 86, 88], [96, 85, 87]]
+          .map(([no, left, right]) => simulateKnockoutMatch(no, "Oitavas", winnerByNo.get(left), winnerByNo.get(right)));
+        rounds.push({ name: "Oitavas", matches: round16 });
+        recordKnockoutRound(round16, winnerByNo, loserByNo);
+        const quarters = [[97, 89, 90], [98, 93, 94], [99, 91, 92], [100, 95, 96]]
+          .map(([no, left, right]) => simulateKnockoutMatch(no, "Quartas", winnerByNo.get(left), winnerByNo.get(right)));
+        rounds.push({ name: "Quartas", matches: quarters });
+        recordKnockoutRound(quarters, winnerByNo, loserByNo);
+        const semis = [[101, 97, 98], [102, 99, 100]]
+          .map(([no, left, right]) => simulateKnockoutMatch(no, "Semifinal", winnerByNo.get(left), winnerByNo.get(right)));
+        rounds.push({ name: "Semifinais", matches: semis });
+        recordKnockoutRound(semis, winnerByNo, loserByNo);
+        const thirdPlace = simulateKnockoutMatch(103, "3o lugar", loserByNo.get(101), loserByNo.get(102));
+        const final = simulateKnockoutMatch(104, "Final", winnerByNo.get(101), winnerByNo.get(102));
+        rounds.push({ name: "3o lugar", matches: [thirdPlace] });
+        rounds.push({ name: "Final", matches: [final] });
+        return { rounds, champion: final.winner };
+      }
+
+      function groupSlot(group, rank) {
+        return { type: "group", group, rank };
+      }
+
+      function thirdSlot(allowedGroups) {
+        return { type: "third", allowedGroups };
+      }
+
+      function knockoutQualifiers(standings) {
+        const winners = {};
+        const runners = {};
+        const thirdCandidates = [];
+        standings.forEach((rows, group) => {
+          winners[group] = teamFromStanding(rows[0], group, 1);
+          runners[group] = teamFromStanding(rows[1], group, 2);
+          thirdCandidates.push(teamFromStanding(rows[2], group, 3));
+        });
+        thirdCandidates.sort(thirdRankCompare);
+        return { winners, runners, thirds: thirdCandidates.slice(0, 8) };
+      }
+
+      function teamFromStanding(row, group, rank) {
+        return { code: row.code, name: row.name, group, rank, pts: row.pts, gd: row.gd, gf: row.gf };
+      }
+
+      function thirdRankCompare(a, b) {
+        return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || tieSeed(a.code) - tieSeed(b.code);
+      }
+
+      function assignThirdPlaceSlots(thirds, slots) {
+        const officialAssignments = assignOfficialThirdPlaceSlots(thirds);
+        if (officialAssignments) return officialAssignments;
+
+        const thirdSlots = slots.filter((slot) => slot.away.type === "third");
+        const orderedSlots = [...thirdSlots].sort((a, b) => a.away.allowedGroups.length - b.away.allowedGroups.length);
+        const assignments = new Map();
+        function backtrack(index, remaining) {
+          if (index >= orderedSlots.length) return true;
+          const slot = orderedSlots[index];
+          const candidates = remaining.filter((team) => slot.away.allowedGroups.includes(team.group));
+          for (const team of candidates) {
+            assignments.set(slot.no, team);
+            if (backtrack(index + 1, remaining.filter((candidate) => candidate.code !== team.code))) return true;
+            assignments.delete(slot.no);
+          }
+          return false;
+        }
+        if (!backtrack(0, thirds)) {
+          const remaining = [...thirds];
+          thirdSlots.forEach((slot) => {
+            const index = remaining.findIndex((team) => slot.away.allowedGroups.includes(team.group));
+            const pickedIndex = index >= 0 ? index : 0;
+            assignments.set(slot.no, remaining[pickedIndex]);
+            remaining.splice(pickedIndex, 1);
+          });
+        }
+        return assignments;
+      }
+
+      function assignOfficialThirdPlaceSlots(thirds) {
+        const table = window.WC2026_THIRD_PLACE_TABLE;
+        if (!table?.getAssignments) return null;
+
+        const thirdsByGroup = new Map(thirds.map((team) => [team.group, team]));
+        const officialSlots = table.getAssignments([...thirdsByGroup.keys()]);
+        if (!officialSlots) return null;
+
+        const assignments = new Map();
+        officialSlots.forEach((slot) => {
+          const team = thirdsByGroup.get(slot.thirdGroup);
+          if (team) assignments.set(slot.matchNo, team);
+        });
+
+        return assignments.size === 8 ? assignments : null;
+      }
+
+      function resolveKnockoutSlot(slot, qualifiers, thirdAssignments, matchNo) {
+        if (slot.type === "third") return thirdAssignments.get(matchNo);
+        return slot.rank === 1 ? qualifiers.winners[slot.group] : qualifiers.runners[slot.group];
+      }
+
+      function simulateKnockoutMatch(no, roundName, home, away, note = "") {
+        const match = {
+          key: `KO-${no}-${home.code}-${away.code}`,
+          id: `KO-${no}`,
+          homeCode: home.code,
+          awayCode: away.code,
+          homeName: home.name,
+          awayName: away.name,
+          kickoff: "",
+          group: "",
+          odds1x2: {},
+          correctScore: {},
+          knockoutStage: knockoutStageForRound(roundName),
+          real: null
+        };
+        const result = simulateMatch(match);
+        let winner = result.homeGoals > result.awayGoals ? home : away;
+        let loser = result.homeGoals > result.awayGoals ? away : home;
+        let penalties = null;
+        if (result.homeGoals === result.awayGoals) {
+          const advance = result.distribution?.advanceProbabilities;
+          const homeWins = advance ? Math.random() < advance.home : Math.random() >= .5;
+          winner = homeWins ? home : away;
+          loser = homeWins ? away : home;
+          penalties = homeWins ? { home: randomInt(4, 6), away: randomInt(2, 5) } : { home: randomInt(2, 5), away: randomInt(4, 6) };
+          if (penalties.home === penalties.away) {
+            if (homeWins) penalties.home += 1;
+            else penalties.away += 1;
+          }
+        }
+        return { no, roundName, note, home, away, homeGoals: result.homeGoals, awayGoals: result.awayGoals, penalties, winner, loser, distribution: result.distribution };
+      }
+
+      function knockoutStageForRound(roundName) {
+        const normalized = normalizeName(roundName);
+        if (normalized.includes("32")) return "round_of_16";
+        if (normalized.includes("oitavas")) return "quarterfinal";
+        if (normalized.includes("quartas")) return "semifinal";
+        if (normalized.includes("semifinal")) return "final";
+        if (normalized.includes("final")) return "champion";
+        if (normalized.includes("3")) return "final";
+        return "champion";
+      }
+
+      function recordKnockoutRound(matches, winnerByNo, loserByNo) {
+        matches.forEach((match) => {
+          winnerByNo.set(match.no, match.winner);
+          loserByNo.set(match.no, match.loser);
+        });
+      }
+
+      function computeStandings(results) {
+        const standings = new Map();
+        state.groups.forEach((teams, group) => {
+          standings.set(group, teams.map((team) => ({ code: team.code, name: displayCountryName(team.code, team.name), pts: 0, pj: 0, gf: 0, ga: 0, gd: 0, wins: 0 })));
+        });
+        results.forEach((result) => {
+          const group = result.match.group;
+          if (!group || !standings.has(group)) return;
+          const rows = standings.get(group);
+          const home = rows.find((row) => row.code === result.match.homeCode);
+          const away = rows.find((row) => row.code === result.match.awayCode);
+          if (!home || !away) return;
+          applyStanding(home, result.homeGoals, result.awayGoals);
+          applyStanding(away, result.awayGoals, result.homeGoals);
+        });
+        standings.forEach((rows, group) => {
+          const groupResults = results.filter((result) => result.match.group === group);
+          rows.sort((a, b) => basicRankCompare(a, b));
+          const sorted = [];
+          for (let index = 0; index < rows.length;) {
+            const tied = rows.filter((row) => row.pts === rows[index].pts && row.gd === rows[index].gd && row.gf === rows[index].gf);
+            tied.sort((a, b) => headToHeadCompare(a, b, tied, groupResults) || tieSeed(a.code) - tieSeed(b.code));
+            sorted.push(...tied);
+            index += tied.length;
+          }
+          rows.splice(0, rows.length, ...sorted);
+        });
+        return standings;
+      }
+
+      function basicRankCompare(a, b) {
+        return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf;
+      }
+
+      function headToHeadCompare(a, b, tiedRows, groupResults) {
+        if (tiedRows.length < 2) return 0;
+        const codes = tiedRows.map((row) => row.code);
+        const mini = new Map(codes.map((code) => [code, { pts: 0, gf: 0, ga: 0, gd: 0 }]));
+        groupResults.forEach((result) => {
+          const homeCode = result.match.homeCode;
+          const awayCode = result.match.awayCode;
+          if (!codes.includes(homeCode) || !codes.includes(awayCode)) return;
+          applyMiniStanding(mini.get(homeCode), result.homeGoals, result.awayGoals);
+          applyMiniStanding(mini.get(awayCode), result.awayGoals, result.homeGoals);
+        });
+        const statA = mini.get(a.code);
+        const statB = mini.get(b.code);
+        return statB.pts - statA.pts || statB.gd - statA.gd || statB.gf - statA.gf;
+      }
+
+      function applyMiniStanding(row, goalsFor, goalsAgainst) {
+        row.gf += goalsFor;
+        row.ga += goalsAgainst;
+        row.gd = row.gf - row.ga;
+        if (goalsFor > goalsAgainst) row.pts += 3;
+        else if (goalsFor === goalsAgainst) row.pts += 1;
+      }
+
+      function applyStanding(row, goalsFor, goalsAgainst) {
+        row.pj += 1;
+        row.gf += goalsFor;
+        row.ga += goalsAgainst;
+        row.gd = row.gf - row.ga;
+        if (goalsFor > goalsAgainst) {
+          row.pts += 3;
+          row.wins += 1;
+        } else if (goalsFor === goalsAgainst) {
+          row.pts += 1;
+        }
+      }
+
+      function tieSeed(key) {
+        if (!state.tieSeeds.has(key)) state.tieSeeds.set(key, Math.random());
+        return state.tieSeeds.get(key);
+      }
+
+      function resolveCountryCode(name) {
+        if (!name) return "";
+        return state.countryIndex.byName.get(normalizeName(name)) || "";
+      }
+
+      function displayCountryName(code, fallback) {
+        return state.countryIndex.byCode.get(code)?.short_name || fallback || code;
+      }
+
+      function normalizeOutcomeSource(source, odds) {
+        if (!isValidOutcomeOdds(odds)) return null;
+        const raw = { home: 1 / toNumber(odds.home), draw: 1 / toNumber(odds.draw), away: 1 / toNumber(odds.away) };
+        const overround = raw.home + raw.draw + raw.away;
+        return { source, overround, probabilities: { home: raw.home / overround, draw: raw.draw / overround, away: raw.away / overround } };
+      }
+
+      function isValidOutcomeOdds(odds) {
+        return toNumber(odds?.home) > 1 && toNumber(odds?.draw) > 1 && toNumber(odds?.away) > 1;
+      }
+
+      function parseScore(score) {
+        const match = String(score).match(/(\d+)\s*-\s*(\d+)/);
+        if (!match) return null;
+        const home = Number(match[1]);
+        const away = Number(match[2]);
+        return { home, away, score: `${home}-${away}` };
+      }
+
+      function renormalizeEntries(entries) {
+        const total = entries.reduce((sum, entry) => sum + entry.prob, 0);
+        if (!total) return entries;
+        return entries.map((entry) => ({ ...entry, prob: entry.prob / total }));
+      }
+
+      function weightedPick(entries) {
+        let cursor = Math.random();
+        for (const entry of entries) {
+          cursor -= entry.prob;
+          if (cursor <= 0) return entry;
+        }
+        return entries[entries.length - 1];
+      }
+
+      function average(values) {
+        const valid = values.filter((value) => Number.isFinite(value));
+        if (!valid.length) return 0;
+        return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+      }
+
+      function poisson(k, lambda) {
+        return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial(k);
+      }
+
+      function factorial(value) {
+        let result = 1;
+        for (let index = 2; index <= value; index += 1) result *= index;
+        return result;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function toArray(input) {
+        if (!input) return [];
+        if (Array.isArray(input)) return input;
+        if (typeof input === "object") return Object.values(input).flatMap((value) => toArray(value));
+        return [];
+      }
+
+      function toNumber(value) {
+        const number = Number(String(value ?? "").replace(",", "."));
+        return Number.isFinite(number) ? number : 0;
+      }
+
+      function normalizeName(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/&/g, " e ")
+          .replace(/[()]/g, " ")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      }
+
+      function formatKickoff(value) {
+        if (!value) return "Data indefinida";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "Data indefinida";
+        return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    })();
+  </script>
+</body>
+</html>
