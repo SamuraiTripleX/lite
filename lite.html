@@ -482,7 +482,7 @@
     (() => {
       const DATA = window.SIMULADOR_DATA || {};
       const CORRECT_SCORE_SOURCES = ["betano", "bet365"];
-      const KNOCKOUT_SOURCES = ["theanalyst", "chancedegol"];
+      const KNOCKOUT_SOURCE = "theanalyst";
 
       const state = {
         countries: DATA.countries || { countries: [] },
@@ -1178,10 +1178,7 @@
       }
 
       function knockoutTeamProbability(code, stage) {
-        const values = KNOCKOUT_SOURCES
-          .map((source) => toNumber(state.knockoutIndex.get(source)?.get(code)?.[stage]))
-          .filter((value) => value > 0);
-        return values.reduce((sum, value) => sum + value, 0);
+        return toNumber(state.knockoutIndex.get(KNOCKOUT_SOURCE)?.get(code)?.[stage]);
       }
 
       function closestCorrectScoreReference(targetOutcome, currentMatch) {
