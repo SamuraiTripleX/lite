@@ -1165,7 +1165,7 @@
         const draw = reference?.outcome?.draw ?? .28;
         const nonDraw = 1 - draw;
         const outcomeProbabilities = { home: nonDraw * advanceProbabilities.home, draw, away: nonDraw * advanceProbabilities.away };
-        const scoreDistribution = borrowedCorrectScoreDistribution(match);
+        const scoreDistribution = closestCorrectScoreReference(outcomeProbabilities, match) || borrowedCorrectScoreDistribution(match);
         const scoreModel = scoreDistributionFromOutcome(outcomeProbabilities, scoreDistribution?.entries);
         return {
           kind: "knockout_phase",
@@ -1181,7 +1181,61 @@
         const values = KNOCKOUT_SOURCES
           .map((source) => toNumber(state.knockoutIndex.get(source)?.get(code)?.[stage]))
           .filter((value) => value > 0);
-        return average(values);
+        return values.reduce((sum, value) => sum + value, 0);
+      }
+
+      function closestCorrectScoreReference(targetOutcome, currentMatch) {
+        const donors = state.matches
+          .filter((candidate) => candidate.key !== currentMatch.key)
+          .map((candidate) => {
+            const distribution = correctScoreDistribution(candidate);
+            if (!distribution) return null;
+
+            const normalized = Object.keys(candidate.odds1x2 || {})
+              .map((source) => normalizeOutcomeSource(source, candidate.odds1x2[source]))
+              .filter(Boolean);
+            if (!normalized.length) return null;
+
+            const outcome = averageOutcomeProbabilities(normalized);
+            const orientation = closestOutcomeOrientation(outcome, targetOutcome);
+            return {
+              match: candidate,
+              distribution,
+              distance: orientation.distance,
+              mirror: orientation.mirror
+            };
+          })
+          .filter(Boolean);
+
+        if (!donors.length) return null;
+
+        const donor = donors.reduce((best, item) => {
+          if (!best || item.distance < best.distance) return item;
+          return best;
+        }, null);
+        const entries = donor.mirror ? mirrorScoreEntries(donor.distribution.entries) : donor.distribution.entries;
+        return { ...donor.distribution, kind: "similar_correct_score", entries, borrowedFrom: donor.match.key, mirrored: donor.mirror };
+      }
+
+      function closestOutcomeOrientation(outcome, target) {
+        const sameDistance = outcomeDistance(outcome, target);
+        const swapped = swapOutcomeSides(outcome);
+        const swappedDistance = outcomeDistance(swapped, target);
+        return swappedDistance < sameDistance
+          ? { distance: swappedDistance, mirror: true }
+          : { distance: sameDistance, mirror: false };
+      }
+
+      function outcomeDistance(left, right) {
+        return Math.abs(left.home - right.home) + Math.abs(left.draw - right.draw) + Math.abs(left.away - right.away);
+      }
+
+      function swapOutcomeSides(outcome) {
+        return { home: outcome.away, draw: outcome.draw, away: outcome.home };
+      }
+
+      function mirrorScoreEntries(entries) {
+        return entries.map((entry) => ({ ...entry, home: entry.away, away: entry.home, score: `${entry.away}-${entry.home}` }));
       }
 
       function closestOutcomeReference(advanceProbabilities) {
