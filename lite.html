@@ -1458,13 +1458,59 @@
           const homeWins = advance ? Math.random() < advance.home : Math.random() >= .5;
           winner = homeWins ? home : away;
           loser = homeWins ? away : home;
-          penalties = homeWins ? { home: randomInt(4, 6), away: randomInt(2, 5) } : { home: randomInt(2, 5), away: randomInt(4, 6) };
-          if (penalties.home === penalties.away) {
-            if (homeWins) penalties.home += 1;
-            else penalties.away += 1;
-          }
+          penalties = simulatePenaltyShootout(homeWins);
         }
         return { no, roundName, note, home, away, homeGoals: result.homeGoals, awayGoals: result.awayGoals, penalties, winner, loser, distribution: result.distribution };
+      }
+
+      function simulatePenaltyShootout(homeWins) {
+        for (let attempt = 0; attempt < 200; attempt += 1) {
+          const penalties = runPenaltyShootout();
+          if ((penalties.home > penalties.away) === homeWins) return penalties;
+        }
+        return homeWins ? { home: 5, away: 4 } : { home: 4, away: 5 };
+      }
+
+      function runPenaltyShootout() {
+        let home = 0;
+        let away = 0;
+        let homeKicks = 0;
+        let awayKicks = 0;
+
+        for (let round = 1; round <= 5; round += 1) {
+          home += penaltyKick();
+          homeKicks += 1;
+          if (penaltyWinner(home, away, homeKicks, awayKicks)) return { home, away };
+
+          away += penaltyKick();
+          awayKicks += 1;
+          if (penaltyWinner(home, away, homeKicks, awayKicks)) return { home, away };
+        }
+
+        for (let round = 0; round < 30; round += 1) {
+          const homeGoal = penaltyKick();
+          const awayGoal = penaltyKick();
+          home += homeGoal;
+          away += awayGoal;
+          if (homeGoal !== awayGoal) return { home, away };
+        }
+
+        return Math.random() >= .5
+          ? { home: home + 1, away }
+          : { home, away: away + 1 };
+      }
+
+      function penaltyWinner(home, away, homeKicks, awayKicks) {
+        const homeRemaining = 5 - homeKicks;
+        const awayRemaining = 5 - awayKicks;
+        if (home > away + awayRemaining) return "home";
+        if (away > home + homeRemaining) return "away";
+        if (homeKicks === 5 && awayKicks === 5 && home !== away) return home > away ? "home" : "away";
+        return "";
+      }
+
+      function penaltyKick() {
+        return Math.random() < .76 ? 1 : 0;
       }
 
       function knockoutStageForRound(roundName) {
